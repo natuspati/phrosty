@@ -11,6 +11,9 @@ from databases import Database
 from app.models.cleaning import CleaningCreate, CleaningInDB
 from app.db.repositories.cleanings import CleaningsRepository
 
+from app.models.user import UserCreate, UserInDB
+from app.db.repositories.users import UsersRepository
+
 import alembic
 from alembic.config import Config
 
@@ -57,3 +60,18 @@ async def client(app: FastAPI) -> TestClient:
             app, headers={"Content-Type": "application/json"}
     ) as client:
         yield client
+
+
+@pytest_asyncio.fixture
+async def test_user(db: Database) -> UserInDB:
+    new_user = UserCreate(
+        email="example@mail.com",
+        username="example",
+        password="longpassword",
+    )
+    user_repo = UsersRepository(db)
+    
+    existing_user = await user_repo.get_user_by_email(email=new_user.email)
+    if existing_user:
+        return existing_user
+    return await user_repo.register_new_user(new_user=new_user)
