@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic
-revision = "12345678654"
+revision = "895636233437"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -56,7 +56,8 @@ def create_cleanings_table() -> None:
         sa.Column("description", sa.Text, nullable=True),
         sa.Column("cleaning_type", sa.Text, nullable=False, server_default="spot_clean"),
         sa.Column("price", sa.Numeric(10, 2), nullable=False),
-        *timestamps(),
+        sa.Column("owner", sa.Integer, sa.ForeignKey("users.id", ondelete="CASCADE")),
+        *timestamps(indexed=True),
     )
     op.execute(
         """
@@ -93,13 +94,37 @@ def create_users_table() -> None:
     )
 
 
+def create_profiles_table() -> None:
+    op.create_table(
+        "profiles",
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("full_name", sa.Text, nullable=True),
+        sa.Column("phone_number", sa.Text, nullable=True),
+        sa.Column("bio", sa.Text, nullable=True, server_default=""),
+        sa.Column("image", sa.Text, nullable=True),
+        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id", ondelete="CASCADE")),
+        *timestamps(),
+    )
+    op.execute(
+        """
+        CREATE TRIGGER update_profiles_modtime
+            BEFORE UPDATE
+            ON profiles
+            FOR EACH ROW
+        EXECUTE PROCEDURE update_updated_at_column();
+        """
+    )
+
+
 def upgrade() -> None:
     create_updated_at_trigger()
-    create_cleanings_table()
     create_users_table()
+    create_profiles_table()
+    create_cleanings_table()
 
 
 def downgrade() -> None:
-    op.drop_table("users")
     op.drop_table("cleanings")
+    op.drop_table("profiles")
+    op.drop_table("users")
     op.execute("DROP FUNCTION update_updated_at_column")
