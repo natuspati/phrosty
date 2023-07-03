@@ -6,6 +6,7 @@ __pycache__/
 
 # IDE
 .idea
+.idea/
 
 # User-specific stuff
 .idea/**/workspace.xml
