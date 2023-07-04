@@ -1,4 +1,5 @@
 from typing import Optional
+
 from pydantic import EmailStr
 from fastapi import HTTPException, status
 from databases import Database
@@ -77,7 +78,6 @@ class UsersRepository(BaseRepository):
     async def authenticate_user(self, *, email: EmailStr, password: str) -> Optional[UserInDB]:
         # make user user exists in db
         user = await self.get_user_by_email(email=email, populate=False)
-        
         if not user:
             return None
         # if submitted password doesn't match

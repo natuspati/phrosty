@@ -33,7 +33,7 @@ async def user_login_with_email_and_password(
         form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm),
 ) -> AccessToken:
     user = await user_repo.authenticate_user(email=form_data.username, password=form_data.password)
-    
+
     if not user:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,

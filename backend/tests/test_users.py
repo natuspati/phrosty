@@ -200,7 +200,7 @@ class TestUserLogin:
         client.headers["content-type"] = "application/x-www-form-urlencoded"
         login_data = {
             "username": test_user.email,
-            "password": "longpassword",  # insert user's plaintext password
+            "password": "tottenham",  # insert user's plaintext password
         }
         res = await client.post(
             app.url_path_for("users:login-email-and-password"),

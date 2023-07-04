@@ -11,16 +11,19 @@ CREATE_CLEANING_QUERY = """
     VALUES (:name, :description, :price, :cleaning_type, :owner)
     RETURNING id, name, description, price, cleaning_type, owner, created_at, updated_at;
 """
+
 GET_CLEANING_BY_ID_QUERY = """
     SELECT id, name, description, price, cleaning_type, owner, created_at, updated_at
     FROM cleanings
     WHERE id = :id;
 """
+
 LIST_ALL_USER_CLEANINGS_QUERY = """
     SELECT id, name, description, price, cleaning_type, owner, created_at, updated_at
     FROM cleanings
     WHERE owner = :owner;
 """
+
 UPDATE_CLEANING_BY_ID_QUERY = """
     UPDATE cleanings
     SET name         = :name,
@@ -30,6 +33,7 @@ UPDATE_CLEANING_BY_ID_QUERY = """
     WHERE id = :id
     RETURNING id, name, description, price, cleaning_type, owner, created_at, updated_at;
 """
+
 DELETE_CLEANING_BY_ID_QUERY = """
     DELETE FROM cleanings
     WHERE id = :id
