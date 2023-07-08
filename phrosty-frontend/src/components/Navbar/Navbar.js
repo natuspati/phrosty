@@ -15,13 +15,14 @@ import {
     EuiFlexItem,
     EuiLink
 } from "@elastic/eui"
-import {Link} from "react-router-dom"
+import {Link, useNavigate} from "react-router-dom"
 import loginIcon from "../../assets/img/loginIcon.svg"
 import styled from "styled-components"
 
 const LogoSection = styled(EuiHeaderLink)`
   padding: 0 2rem;
 `
+
 const AvatarMenu = styled.div`
   display: flex;
   justify-content: space-between;
@@ -34,12 +35,18 @@ const AvatarMenu = styled.div`
 
 function Navbar({user, logUserOut, ...props}) {
     const [avatarMenuOpen, setAvatarMenuOpen] = React.useState(false)
+    const navigate = useNavigate()
+
     const toggleAvatarMenu = () => setAvatarMenuOpen(!avatarMenuOpen)
+
     const closeAvatarMenu = () => setAvatarMenuOpen(false)
+
     const handleLogout = () => {
         closeAvatarMenu()
         logUserOut()
+        navigate("/")
     }
+
     const avatarButton = (
         <EuiHeaderSectionItemButton
             aria-label="User avatar"
@@ -48,7 +55,7 @@ function Navbar({user, logUserOut, ...props}) {
             {user?.profile ? (
                 <EuiAvatar
                     size="l"
-                    name={user.profile.full_name || "Anonymous"}
+                    name={user.profile.full_name || user.username || "Anonymous"}
                     initialsLength={2}
                     imageUrl={user.profile.image}
                 />
@@ -59,13 +66,15 @@ function Navbar({user, logUserOut, ...props}) {
             )}
         </EuiHeaderSectionItemButton>
     )
+
     const renderAvatarMenu = () => {
         if (!user?.profile) return null
+
         return (
             <AvatarMenu>
                 <EuiAvatar
                     size="xl"
-                    name={user.profile.full_name || "Anonymous"}
+                    name={user.profile.full_name || user.username || "Anonymous"}
                     initialsLength={2}
                     imageUrl={user.profile.image}
                 />
@@ -75,6 +84,7 @@ function Navbar({user, logUserOut, ...props}) {
                             {user.email} - {user.username}
                         </p>
                     </EuiFlexItem>
+
                     <EuiFlexItem grow={1}>
                         <EuiFlexGroup justifyContent="spaceBetween">
                             <EuiFlexItem grow={1}>
@@ -89,6 +99,7 @@ function Navbar({user, logUserOut, ...props}) {
             </AvatarMenu>
         )
     }
+
     return (
         <EuiHeader style={props.style || {}}>
             <EuiHeaderSection>
@@ -102,15 +113,18 @@ function Navbar({user, logUserOut, ...props}) {
                         <EuiHeaderLink iconType="tear" href="#">
                             Find Cleaners
                         </EuiHeaderLink>
+
                         <EuiHeaderLink iconType="tag" href="#">
                             Find Jobs
                         </EuiHeaderLink>
+
                         <EuiHeaderLink iconType="help" href="#">
                             Help
                         </EuiHeaderLink>
                     </EuiHeaderLinks>
                 </EuiHeaderSectionItem>
             </EuiHeaderSection>
+
             <EuiHeaderSection>
                 <EuiPopover
                     id="avatar-menu"
