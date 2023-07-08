@@ -17,15 +17,23 @@ GET_USER_BY_EMAIL_QUERY = """
     FROM users
     WHERE email = :email;
 """
+
 GET_USER_BY_USERNAME_QUERY = """
     SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE username = :username;
 """
+
 REGISTER_NEW_USER_QUERY = """
     INSERT INTO users (username, email, password, salt)
     VALUES (:username, :email, :password, :salt)
     RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+"""
+
+GET_USER_BY_ID_QUERY = """
+    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    FROM users
+    WHERE id = :id;
 """
 
 
@@ -93,3 +101,11 @@ class UsersRepository(BaseRepository):
             # fetch the user's profile from the profiles repo
             profile=await self.profiles_repo.get_profile_by_user_id(user_id=user.id)
         )
+    
+    async def get_user_by_id(self, *, user_id: int, populate: bool = True) -> UserPublic:
+        user_record = await self.db.fetch_one(query=GET_USER_BY_ID_QUERY, values={"id": user_id})
+        if user_record:
+            user = UserInDB(**user_record)
+            if populate:
+                return await self.populate_user(user=user)
+            return user
