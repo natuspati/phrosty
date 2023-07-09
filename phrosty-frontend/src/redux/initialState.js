@@ -1,6 +1,7 @@
 const initialState = {
     auth: {
         isLoading: false,
+        isUpdating: false,
         error: false,
         user: {}
     },
