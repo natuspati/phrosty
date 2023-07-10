@@ -41,7 +41,7 @@ const transitionEase = [0.68, -0.55, 0.265, 1.55]
 export default function Carousel({items = [], current, ...props}) {
     return (
         <CarouselWrapper {...props}>
-            <AnimatePresence exitBeforeEnter>
+            <AnimatePresence mode='wait'>
                 {items.map((item, i) =>
                     current === i ? (
                         <React.Fragment key={i}>

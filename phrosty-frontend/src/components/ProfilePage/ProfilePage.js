@@ -1,18 +1,18 @@
 import React from "react"
-import { connect } from "react-redux"
+import {useAuthenticatedUser} from "hooks/auth/useAuthenticatedUser"
 import {
-  EuiAvatar,
-  EuiHorizontalRule,
-  EuiIcon,
-  EuiPage,
-  EuiPageBody,
-  EuiPageContent_Deprecated,
-  EuiPageContentBody_Deprecated,
-  EuiPageHeader,
-  EuiPageHeaderSection,
-  EuiTitle,
-  EuiText
+    EuiHorizontalRule,
+    EuiIcon,
+    EuiPage,
+    EuiPageBody,
+    EuiPageContent_Deprecated,
+    EuiPageContentBody_Deprecated,
+    EuiPageHeader,
+    EuiPageHeaderSection,
+    EuiTitle,
+    EuiText
 } from "@elastic/eui"
+import {UserAvatar} from "components"
 import moment from "moment"
 import styled from "styled-components"
 
@@ -39,54 +39,48 @@ const StyledEuiPageContentBody = styled(EuiPageContentBody_Deprecated)`
   }
 `
 
-function ProfilePage({ user }) {
-  return (
-    <StyledEuiPage>
-      <EuiPageBody component="section">
-        <StyledEuiPageHeader>
-          <EuiPageHeaderSection>
-            <EuiTitle size="l">
-              <h1>Profile</h1>
-            </EuiTitle>
-          </EuiPageHeaderSection>
-        </StyledEuiPageHeader>
-        <EuiPageContent_Deprecated verticalPosition="center" horizontalPosition="center">
-          <StyledEuiPageContentBody>
-            <EuiAvatar
-              size="xl"
-              name={user.profile.full_name || user.username || "Anonymous"}
-              initialsLength={2}
-              imageUrl={user.profile.image}
-            />
-            <EuiTitle size="l">
-              <h2>@{user.username}</h2>
-            </EuiTitle>
-            <EuiText>
-              <p>
-                <EuiIcon type="email" /> {user.email}
-              </p>
-              <p>
-                <EuiIcon type="clock" /> member since {moment(user.created_at).format("MM-DD-YYYY")}
-              </p>
-              <p>
-                <EuiIcon type="alert" />{" "}
-                {user.profile.full_name ? user.profile.full_name : "Full name not specified"}
-              </p>
-              <p>
-                <EuiIcon type="number" />{" "}
-                {user.profile.phone_number ? user.profile.phone_number : "No phone number added"}
-              </p>
-              <EuiHorizontalRule />
-              <p>
-                <EuiIcon type="quote" />{" "}
-                {user.profile.bio ? user.profile.bio : "This user hasn't written a bio yet"}
-              </p>
-            </EuiText>
-          </StyledEuiPageContentBody>
-        </EuiPageContent_Deprecated>
-      </EuiPageBody>
-    </StyledEuiPage>
-  )
+export default function ProfilePage() {
+    const {user} = useAuthenticatedUser()
+    return (
+        <StyledEuiPage>
+            <EuiPageBody component="section">
+                <StyledEuiPageHeader>
+                    <EuiPageHeaderSection>
+                        <EuiTitle size="l">
+                            <h1>Profile</h1>
+                        </EuiTitle>
+                    </EuiPageHeaderSection>
+                </StyledEuiPageHeader>
+                <EuiPageContent_Deprecated verticalPosition="center" horizontalPosition="center">
+                    <StyledEuiPageContentBody>
+                        <UserAvatar size="xl" user={user} initialsLength={2}/>
+                        <EuiTitle size="l">
+                            <h2>@{user?.username}</h2>
+                        </EuiTitle>
+                        <EuiText>
+                            <p>
+                                <EuiIcon type="email"/> {user.email}
+                            </p>
+                            <p>
+                                <EuiIcon type="clock"/> member since {moment(user.created_at).format("MM-DD-YYYY")}
+                            </p>
+                            <p>
+                                <EuiIcon type="alert"/>{" "}
+                                {user.profile.full_name ? user.profile.full_name : "Full name not specified"}
+                            </p>
+                            <p>
+                                <EuiIcon type="number"/>{" "}
+                                {user.profile.phone_number ? user.profile.phone_number : "No phone number added"}
+                            </p>
+                            <EuiHorizontalRule/>
+                            <p>
+                                <EuiIcon type="quote"/>{" "}
+                                {user.profile.bio ? user.profile.bio : "This user hasn't written a bio yet"}
+                            </p>
+                        </EuiText>
+                    </StyledEuiPageContentBody>
+                </EuiPageContent_Deprecated>
+            </EuiPageBody>
+        </StyledEuiPage>
+    )
 }
-
-export default connect((state) => ({ user: state.auth.user }))(ProfilePage)

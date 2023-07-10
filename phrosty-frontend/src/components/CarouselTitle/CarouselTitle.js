@@ -51,7 +51,7 @@ export default function CarouselTitle({items, current}) {
                         <h1 key={i}>{word}</h1>
                     ))}
 
-                    <AnimatePresence exitBeforeEnter>
+                    <AnimatePresence mode='wait'>
                         <AnimatedCarouselTitle>
                             {items.map((item, i) => {
                                 return (

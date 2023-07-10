@@ -2,14 +2,32 @@ const initialState = {
     auth: {
         isLoading: false,
         isUpdating: false,
-        error: false,
+        isAuthenticated: false,
+        error: null,
+        userLoaded: false,
         user: {}
     },
     cleanings: {
         isLoading: false,
+        isUpdating: false,
         error: null,
         data: {},
-        currentCleaningJob: null
+        activeCleaningId: null
+    },
+    offers: {
+        isLoading: false,
+        isUpdating: false,
+        error: null,
+        data: {}
+    },
+    feed: {
+        isLoading: false,
+        error: null,
+        data: {},
+        hasNext: {}
+    },
+    ui: {
+        toastList: []
     }
 }
 
