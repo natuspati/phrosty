@@ -8,7 +8,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/natuspati/phtosty">
+  <a href="https://github.com/natuspati/phrosty">
     <img src=phrosty-frontend/src/assets/img/logo.png alt="Logo" width="200" >
   </a>
 
@@ -163,7 +163,7 @@ Workflow of the service is explained in [About the Project](#about-the-project).
 <p float="left">
   <img src=phrosty-frontend/src/assets/img/LandingPage.png alt="Default" height="200" >
   <img src=phrosty-frontend/src/assets/img/LoginPage.png alt="Default" height="200" >
-  <img src=phrosty-frontend/src/assets/img/ProfilePage.png alt="Default" width="200" >
+  <img src=phrosty-frontend/src/assets/img/ProfilePage.png alt="Default" height="200" >
 </p>
 <p float="left">
   <img src=phrosty-frontend/src/assets/img/SwaggerUIDocs.png alt="Default" width="600">
