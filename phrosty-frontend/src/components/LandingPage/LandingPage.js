@@ -60,7 +60,7 @@ export default function LandingPage() {
             <EuiPageBody component="section">
                 <EuiFlexGroup direction="column" alignItems="center">
                     <EuiFlexItem>
-                        <LandingTitle>Phresh Cleaners</LandingTitle>
+                        <LandingTitle>Phrosty Cleaners</LandingTitle>
                     </EuiFlexItem>
                     <EuiFlexItem>
                         <CarouselTitle items={carouselItems} current={current}/>

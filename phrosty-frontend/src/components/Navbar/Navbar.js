@@ -16,7 +16,7 @@ import {
 } from "@elastic/eui"
 import {UserAvatar} from "components"
 import {Link, useNavigate} from "react-router-dom"
-import loginIcon from "assets/img/loginIcon.svg"
+import loginIcon from "assets/img/pink_logo.png"
 import styled from "styled-components"
 
 const LogoSection = styled(EuiHeaderLink)`
@@ -96,7 +96,7 @@ export default function Navbar() {
             <EuiHeaderSection>
                 <EuiHeaderSectionItem border="right">
                     <LogoSection href="/">
-                        <EuiIcon type="cloudDrizzle" color="#1E90FF" size="l"/> Phresh
+                        <EuiIcon type="snowflake" color="#1E90FF" size="l"/> Phrosty
                     </LogoSection>
                 </EuiHeaderSectionItem>
                 <EuiHeaderSectionItem border="right">
