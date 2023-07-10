@@ -39,7 +39,8 @@ async def create_offer(
         offers_repo: OffersRepository = Depends(get_repository(OffersRepository)),
 ) -> OfferPublic:
     return await offers_repo.create_offer_for_cleaning(
-        new_offer=OfferCreate(cleaning_id=cleaning.id, user_id=current_user.id)
+        new_offer=OfferCreate(cleaning_id=cleaning.id, user_id=current_user.id),
+        requesting_user=current_user,
     )
 
 

@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from __future__ import annotations
+from typing import Optional, Union, List
 from enum import Enum
 
 from app.models.core import IDModelMixin, DateTimeModelMixin, CoreModel
@@ -15,6 +16,7 @@ class CleaningBase(CoreModel):
     """
     All common characteristics of our Cleaning resource
     """
+    
     name: Optional[str]
     description: Optional[str]
     price: Optional[float]
@@ -39,3 +41,10 @@ class CleaningInDB(IDModelMixin, DateTimeModelMixin, CleaningBase):
 
 class CleaningPublic(CleaningInDB):
     owner: Union[int, UserPublic]
+    total_offers: Optional[int]
+    offers: List[OfferPublic] = []
+
+
+from app.models.offer import OfferPublic  # noqa E402
+
+CleaningPublic.update_forward_refs()

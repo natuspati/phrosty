@@ -78,7 +78,7 @@ def check_offer_get_permissions(
         cleaning: CleaningInDB = Depends(get_cleaning_by_id_from_path),
         offer: OfferInDB = Depends(get_offer_for_cleaning_from_user_by_path),
 ) -> None:
-    if cleaning.owner != current_user.id and offer.user_id != current_user.id:
+    if not user_owns_cleaning(user=current_user, cleaning=cleaning) and offer.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Unable to access offer.",
         )

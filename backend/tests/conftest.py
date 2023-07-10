@@ -48,7 +48,8 @@ async def create_cleaning_with_evaluated_offer_helper(
     evals_repo = EvaluationsRepository(db)
     created_cleaning = await cleaning_repo.create_cleaning(new_cleaning=cleaning_create, requesting_user=owner)
     offer = await offers_repo.create_offer_for_cleaning(
-        new_offer=OfferCreate(cleaning_id=created_cleaning.id, user_id=cleaner.id)
+        new_offer=OfferCreate(cleaning_id=created_cleaning.id, user_id=cleaner.id),
+        requesting_user=cleaner,
     )
     await offers_repo.accept_offer(offer=offer)
     await evals_repo.create_evaluation_for_cleaner(
@@ -132,8 +133,10 @@ async def test_cleaning_with_offers(db: Database, test_user2: UserInDB, test_use
     created_cleaning = await cleaning_repo.create_cleaning(new_cleaning=new_cleaning, requesting_user=test_user2)
     for user in test_user_list:
         await offers_repo.create_offer_for_cleaning(
-            new_offer=OfferCreate(cleaning_id=created_cleaning.id, user_id=user.id)
+            new_offer=OfferCreate(cleaning_id=created_cleaning.id, user_id=user.id),
+            requesting_user=user,
         )
+    
     return created_cleaning
 
 
@@ -154,7 +157,8 @@ async def test_cleaning_with_accepted_offer(
     for user in test_user_list:
         offers.append(
             await offers_repo.create_offer_for_cleaning(
-                new_offer=OfferCreate(cleaning_id=created_cleaning.id, user_id=user.id)
+                new_offer=OfferCreate(cleaning_id=created_cleaning.id, user_id=user.id),
+                requesting_user=user,
             )
         )
     
@@ -191,6 +195,32 @@ async def test_list_of_cleanings_with_evaluated_offer(
         )
         for i in range(5)
     ]
+
+
+@pytest_asyncio.fixture
+async def test_list_of_cleanings_with_pending_offers(
+        db: Database, test_user: UserInDB, test_user_list: List[UserInDB]
+) -> List[CleaningInDB]:
+    cleaning_repo = CleaningsRepository(db)
+    offers_repo = OffersRepository(db)
+    cleanings = []
+    for i in range(5):
+        created_cleaning = await cleaning_repo.create_cleaning(
+            new_cleaning=CleaningCreate(
+                name=f"test cleaning with offers - {i}",
+                description=f"test desc for cleaning with offers - {i}",
+                price=float(f"{i}9.99"),
+                cleaning_type="spot_clean",
+            ),
+            requesting_user=test_user,
+        )
+        for user in test_user_list:
+            await offers_repo.create_offer_for_cleaning(
+                new_offer=OfferCreate(cleaning_id=created_cleaning.id, user_id=user.id),
+                requesting_user=user,
+            )
+        cleanings.append(created_cleaning)
+    return cleanings
 
 
 @pytest_asyncio.fixture

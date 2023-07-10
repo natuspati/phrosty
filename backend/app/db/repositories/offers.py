@@ -3,6 +3,7 @@ from typing import List, Union
 from databases import Database
 
 from app.db.repositories.base import BaseRepository
+from app.db.repositories.users import UsersRepository
 
 from app.models.cleaning import CleaningInDB
 from app.models.user import UserInDB
@@ -75,20 +76,37 @@ MARK_OFFER_COMPLETED_QUERY = """
     WHERE cleaning_id = :cleaning_id AND user_id = :user_id
 """
 
+MARK_OFFER_COMPLETED_QUERY = """
+    UPDATE user_offers_for_cleanings
+    SET status = 'completed'
+    WHERE cleaning_id = :cleaning_id
+      AND user_id     = :user_id
+    RETURNING *;
+"""
+
 
 class OffersRepository(BaseRepository):
     def __init__(self, db: Database) -> None:
         super().__init__(db)
+        self.users_repo = UsersRepository(db)
     
-    async def create_offer_for_cleaning(self, *, new_offer: OfferCreate) -> OfferInDB:
+    async def create_offer_for_cleaning(
+            self, *,
+            new_offer: OfferCreate,
+            requesting_user: UserInDB = None
+    ) -> OfferInDB:
         created_offer = await self.db.fetch_one(
             query=CREATE_OFFER_FOR_CLEANING_QUERY,
             values={**new_offer.dict(), "status": "pending"},
         )
-        return OfferInDB(**created_offer)
+        return OfferPublic(**created_offer, user=requesting_user)
     
     async def list_offers_for_cleaning(
-            self, *, cleaning: CleaningInDB, populate: bool = True
+            self,
+            *,
+            cleaning: CleaningInDB,
+            populate: bool = True,
+            requesting_user: UserInDB = None
     ) -> List[Union[OfferInDB, OfferPublic]]:
         offer_records = await self.db.fetch_all(
             query=LIST_OFFERS_FOR_CLEANING_QUERY,
@@ -108,7 +126,7 @@ class OffersRepository(BaseRepository):
         if not offer_record:
             return None
         
-        return OfferInDB(**offer_record)
+        return OfferPublic(**offer_record, user=user)
     
     async def accept_offer(self, *, offer: OfferInDB) -> OfferInDB:
         async with self.db.transaction():
@@ -120,7 +138,7 @@ class OffersRepository(BaseRepository):
                 query=REJECT_ALL_OTHER_OFFERS_QUERY,  # reject all other offers
                 values={"cleaning_id": offer.cleaning_id, "user_id": offer.user_id},
             )
-            return OfferInDB(**accepted_offer)
+            return await self.populate_offer(offer=OfferInDB(**accepted_offer))
     
     async def cancel_offer(self, *, offer: OfferInDB) -> OfferInDB:
         async with self.db.transaction():
@@ -132,7 +150,7 @@ class OffersRepository(BaseRepository):
                 query=SET_ALL_OTHER_OFFERS_AS_PENDING_QUERY,  # set all other offers to pending again
                 values={"cleaning_id": offer.cleaning_id, "user_id": offer.user_id},
             )
-            return OfferInDB(**cancelled_offer)
+            return await self.populate_offer(offer=OfferInDB(**cancelled_offer))
     
     async def rescind_offer(self, *, offer: OfferInDB) -> int:
         return await self.db.execute(
@@ -141,10 +159,11 @@ class OffersRepository(BaseRepository):
         )
     
     async def mark_offer_completed(self, *, cleaning: CleaningInDB, cleaner: UserInDB) -> OfferInDB:
-        return await self.db.fetch_one(
+        offer_record = await self.db.fetch_one(
             query=MARK_OFFER_COMPLETED_QUERY,  # owner of cleaning marks job status as completed
             values={"cleaning_id": cleaning.id, "user_id": cleaner.id},
         )
+        return OfferPublic(**offer_record, user=cleaner)
     
     async def populate_offer(self, *, offer: OfferInDB) -> OfferPublic:
         return OfferPublic(

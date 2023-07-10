@@ -98,13 +98,10 @@ class TestGetOffers:
         selected_user = random.choice(test_user_list)
         res = await authorized_client.get(
             app.url_path_for(
-                "offers:get-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
-                username=selected_user.username,
+                "offers:get-offer-from-user", cleaning_id=test_cleaning_with_offers.id, username=selected_user.username,
             )
         )
         assert res.status_code == status.HTTP_200_OK
-        
         offer = OfferPublic(**res.json())
         assert offer.user_id == selected_user.id
     

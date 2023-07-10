@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Callable
 
 import pytest
 import pytest_asyncio
@@ -108,8 +108,12 @@ class TestGetCleaning:
         res = await authorized_client.get(
             app.url_path_for("cleanings:get-cleaning-by-id", cleaning_id=test_cleaning.id))
         assert res.status_code == status.HTTP_200_OK
-        cleaning = CleaningPublic(**res.json()).dict(exclude={"owner"})
-        assert cleaning == test_cleaning.dict(exclude={"owner"})
+        cleaning = CleaningPublic(**res.json()).dict(
+            exclude={"owner", "offers", "total_offers"},
+        )
+        assert cleaning == test_cleaning.dict(
+            exclude={"owner", "offers", "total_offers"},
+        )
     
     async def test_unauthorized_users_cant_access_cleanings(
             self, app: FastAPI, client: TestClient, test_cleaning: CleaningInDB
@@ -131,22 +135,24 @@ class TestGetCleaning:
             app: FastAPI,
             authorized_client: TestClient,
             test_user: UserInDB,
-            db: Database,
             test_cleaning: CleaningInDB,
             test_cleanings_list: List[CleaningInDB],
     ) -> None:
-        res = await authorized_client.get(app.url_path_for("cleanings:list-all-user-cleanings"))
+        res = await authorized_client.get(
+            app.url_path_for("cleanings:list-all-user-cleanings")
+        )
         assert res.status_code == status.HTTP_200_OK
         assert isinstance(res.json(), list)
         assert len(res.json()) > 0
-        cleanings = [CleaningInDB(**l) for l in res.json()]
+        cleanings = [CleaningPublic(**c) for c in res.json()]
+        cleaning_ids = [c.id for c in cleanings]
         # check that a cleaning created by our user is returned
-        assert test_cleaning in cleanings
+        assert test_cleaning.id in cleaning_ids
         # test that all cleanings returned are owned by this user
         for cleaning in cleanings:
-            assert cleaning.owner == test_user.id
+            assert cleaning.owner.id == test_user.id
         # assert all cleanings created by another user not included (redundant, but fine)
-        assert all(c not in cleanings for c in test_cleanings_list)
+        assert all(c.id not in cleaning_ids for c in test_cleanings_list)
 
 
 class TestUpdateCleaning:
@@ -174,14 +180,16 @@ class TestUpdateCleaning:
             app.url_path_for("cleanings:update-cleaning-by-id", cleaning_id=test_cleaning.id), json=cleaning_update
         )
         assert res.status_code == status.HTTP_200_OK
-        updated_cleaning = CleaningInDB(**res.json())
+        updated_cleaning = CleaningPublic(**res.json())
         assert updated_cleaning.id == test_cleaning.id  # make sure it's the same cleaning
         # make sure that any attribute we updated has changed to the correct value
         for i in range(len(attrs_to_change)):
             assert getattr(updated_cleaning, attrs_to_change[i]) != getattr(test_cleaning, attrs_to_change[i])
             assert getattr(updated_cleaning, attrs_to_change[i]) == values[i]
         # make sure that no other attributes' values have changed
-        for attr, value in updated_cleaning.dict().items():
+        for attr, value in updated_cleaning.dict(
+                exclude={"owner", "offers", "total_offers"}
+        ).items():
             if attr not in attrs_to_change and attr != "updated_at":
                 assert getattr(test_cleaning, attr) == value
     
@@ -208,7 +216,7 @@ class TestUpdateCleaning:
         )
         assert res.status_code == status.HTTP_200_OK
         cleaning = CleaningPublic(**res.json())
-        assert cleaning.owner == test_user.id
+        assert cleaning.owner == test_user
     
     @pytest.mark.parametrize(
         "id, payload, status_code",
@@ -257,3 +265,56 @@ class TestDeleteCleaning:
     ) -> None:
         res = await authorized_client.delete(app.url_path_for("cleanings:delete-cleaning-by-id", cleaning_id=id))
         assert res.status_code == status_code
+
+
+class TestPopulatedCleanings:
+    async def test_user_owned_cleanings_are_populated_with_correct_offers(
+            self,
+            app: FastAPI,
+            create_authorized_client: Callable,
+            test_user: UserInDB,
+            test_user_list: List[UserInDB],
+            test_list_of_cleanings_with_pending_offers: List[CleaningInDB],
+    ) -> None:
+        authorized_client = create_authorized_client(user=test_user)
+        test_user_ids = [u.id for u in test_user_list]
+        test_cleaning_ids = [c.id for c in test_list_of_cleanings_with_pending_offers]
+        res = await authorized_client.get(
+            app.url_path_for("cleanings:list-all-user-cleanings"),
+        )
+        assert res.status_code == status.HTTP_200_OK
+        cleanings = [CleaningPublic(**c) for c in res.json()]
+        for c in cleanings:
+            if c.id in test_cleaning_ids:
+                # ensure that there are the correct number of offers
+                assert len(c.offers) == len(test_user_list)
+                assert c.total_offers == len(test_user_list)
+                # ensure that the offers are valid
+                for offer in c.offers:
+                    assert offer.user_id in test_user_ids
+                    assert offer.user_id != c.owner
+                    assert offer.cleaning_id == c.id
+    
+    async def test_public_cleaning_jobs_list_number_of_total_offers(
+            self,
+            app: FastAPI,
+            create_authorized_client: Callable,
+            test_user2: UserInDB,  # not owner or offer maker
+            test_list_of_cleanings_with_pending_offers: List[CleaningInDB],
+            test_user_list: List[UserInDB],
+    ) -> None:
+        authorized_client = create_authorized_client(user=test_user2)
+        test_cleaning = test_list_of_cleanings_with_pending_offers[0]
+        res = await authorized_client.get(
+            app.url_path_for(
+                "cleanings:get-cleaning-by-id",
+                cleaning_id=test_cleaning.id,
+            )
+        )
+        assert res.status_code == status.HTTP_200_OK
+        cleaning = CleaningPublic(**res.json())
+        assert cleaning.total_offers > 0
+        # one offer for each user
+        assert cleaning.total_offers == len(test_user_list)
+        # but no actual offers are included
+        assert cleaning.offers == []
