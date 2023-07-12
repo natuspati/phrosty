@@ -1,3 +1,5 @@
+<a name="readme-top"></a>
+
 [![LinkedIn][linkedin-shield]][linkedin-url]
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -111,7 +113,7 @@ For the backend, Docker and docker-compose must be installed. See here installat
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/natuspati/country-guess-game.git
+   git clone https://github.com/natuspati/phrosty.git
    ```
 2. Install packages for the front-end
    ```sh
