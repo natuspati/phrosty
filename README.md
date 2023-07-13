@@ -26,8 +26,9 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-the-project">About the Game</a>
+      <a href="#about-the-project">About the Project</a>
       <ul>
+        <li><a href="#features">Features</a></li>
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
@@ -40,8 +41,8 @@
     </li>
     <li><a href="#usage">Usage</a></li>
       <ul>
-        <li><a href="#Running tests">Changes to Front-end</a></li>
-        <li><a href="#screenshots">Changes to Back-end</a></li>
+        <li><a href="#Running tests">Running tests</a></li>
+        <li><a href="#workflow">Workflow</a></li>
       </ul>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
@@ -56,13 +57,49 @@
 
 Phrosty is a full-stack project that aims to build a freelance cleaning service similar to Uber, Lyft.
 
-The primary workflow is
-* A user (_client_) creates a request for a cleaning with a give date, location and price.
-* Cleaning request is available publicly and other users (_cleaners_) can offer to accept the request.
-* When client approves one of the offers, the remaining offers are rejected.
-* Selected cleaner may cancel the offer anytime, thus making the request available again.
-* After the request is satisfied, the client may leave a review of the cleaner. The reviews are aggregated for each
-user and available publicly.
+### Features
+
+* User
+    * Mandatory authentication
+    * User authentication uses email and password
+    * User registration is one-step
+
+
+* Cleaning request
+    * Publicly visible (if request is pending)
+    * Requests with an accepted offer are private
+    * Completed requests allow cleaning evaluations to be made
+
+
+* Cleaning offer
+    * Any authenticated user can create an offer
+    * Request owner cannot create an offer to themselves
+    * Offers are private between request owner and offer owner
+    * Accepted offer cancels other offers for the request
+
+
+* Cleaning evaluation
+    * Publicly visible
+    * 4 evaluation categories
+        * professionalism
+        * completeness
+        * efficiency
+        * overall
+    * Evaluate on scale 1-5
+    * Auto-generated aggregate data
+        * Number of not showing to the job
+        * Averages in each category
+        * Max and min overall rating
+        * Total number of evaluations
+
+
+* User Profile
+    * Edit profile
+        * Full name
+        * Phone number
+        * Bio
+        * Avatar image
+    * Password reset
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -72,18 +109,22 @@ user and available publicly.
 
 Back-end is built with FastAPI using Test Driven Development.
 
-* Pytest is chosen for its mature resources and extensive ecosystem of plugins.
+* Python - 10.8
+* Pytest - 7.4
+* FastAPI - 0.98.0
+* Pydantic v2.0 - 1.10.9
 * Validation and ORM use Pydantic models.
-* SQL queries are written in pure SQL for speed. 
-* Permissions, authorization and pagination are configured with dependencies. 
+* PostgreSQL - 14.7
+* Docker-compose
 
 #### Front-end
 
 Front-end is built with React and Elastic-UI.
 
-* React-router is used for front-end navigation.
-* React-redux manages the state.
-* Custom hooks are used to create a simple apiClient and connect authorization with back-end resources.
+* React - 18.2
+* ElasticUI - 83.1
+* React-router - 6.14
+* React-redux - 8.1
 
 [![FastAPI][fastapi.com]][fastapi-url]
 [![React][React.js]][React-url]
@@ -92,7 +133,6 @@ Front-end is built with React and Elastic-UI.
 [![React Redux][ReactRedux.com]][ReactRedux-url]
 [![Docker][Docker.com]][Docker-url]
 [![PostgreSQL][PostgreSQL.com]][PostgreSQL-url]
-[![Redis][Redis.com]][Redis-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -155,12 +195,59 @@ TDD principle dictates
 The project uses this principle and extensibility of [`backend/tests/`](backend/tests) shows that.
 
 To run the tests, use the command:
+
 ```sh
 pytest -v backend/tests 
 ```
 
-### Screenshots
-Workflow of the service is explained in [About the Project](#about-the-project). The UI examples are below
+### Workflow
+
+#### User
+
+The user app has all the functionalities like login, signup, viewing profile and editing profile.
+
+Any attempt to access service functionalities forces authentication. The user state is kept in
+redux store.
+
+#### Registration
+
+User registration dat is validated from the front-end, then back-end. Validators for password requirements or
+forbidden symbols are kept the same between front and back ends.
+
+#### Profile
+
+User and profile date are kept separate. Edit Profile functionality allows change in name, phone number, bio or
+avatar image, but not email or password.
+
+#### Password
+
+Salt of a password is randomly generated for each sign up or reset operation. JWT tokens are used to transmit sensitive
+data to frontend.
+
+#### CRUD permissions
+
+Permissions for Cleaning/Offer/Evaluation models are performed using FastAPI `Dependency` system.
+Check permission dependencies are injected to routing.
+
+#### Model validation
+
+Pydantic v2.0 is used validate and serialize model instances. Using class inheritance, for each CRUD operation there
+are different Pydantic models.
+
+#### Migrations and ORM
+
+Alembic is used to create migration files , while SQLAlchemy establishes connection to the containerized PostgreSQL
+database and acts as Object Relational Mapper. Pure SQL functions are written for each CRUD operation to increase
+efficiency and control the returning data.
+
+#### Front-end routing
+
+React router handles browser routing. React redux stores user data, so protected routes can be done client-side,
+for example, component that renders the cleaning request feed won't show them unless user is signed in.
+
+
+
+The UI examples are below
 
 <p float="left">
   <img src=phrosty-frontend/src/assets/img/LandingPage.png alt="Default" height="200" >
@@ -184,6 +271,7 @@ Workflow of the service is explained in [About the Project](#about-the-project).
 - [x] Create navigation using React Router
 - [x] Protect user-specific resources using hooks
 - [x] Refactor login/registration to use hooks
+- [ ] Add two-step registration
 - [ ] Allow sorting and filtering offers by price
 - [ ] Add email notifications whenever offer status changes
 - [ ] Add email notifications whenever cleaning status changes
@@ -234,17 +322,29 @@ Thanks to these resources that helped me to build the game.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/natuspati/country-guess-game.svg?style=for-the-badge
+
 [contributors-url]: https://github.com/natuspati/country-guess-game/graphs/contributors
+
 [forks-shield]: https://img.shields.io/github/forks/natuspati/country-guess-game.svg?style=for-the-badge
+
 [forks-url]: https://github.com/natuspati/country-guess-game/network/members
+
 [stars-shield]: https://img.shields.io/github/stars/natuspati/country-guess-game.svg?style=for-the-badge
+
 [stars-url]: https://github.com/natuspati/country-guess-game/stargazers
+
 [issues-shield]: https://img.shields.io/github/issues/natuspati/country-guess-game.svg?style=for-the-badge
+
 [issues-url]: https://github.com/natuspati/country-guess-game/issues
+
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+
 [linkedin-url]: https://www.linkedin.com/in/nurlat/
+
 [license-shield]: https://img.shields.io/github/license/natuspati/country-guess-game.svg?style=for-the-badge
+
 [license-url]: https://github.com/natuspati/country-guess-game/blob/main/LICENSE.txt
 
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
@@ -266,10 +366,6 @@ Thanks to these resources that helped me to build the game.
 [Docker.com]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
 
 [Docker-url]: https://www.docker.com/
-
-[Redis.com]: https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white
-
-[Redis-url]: https://redis.io/
 
 [PostgreSQL.com]: https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white
 
